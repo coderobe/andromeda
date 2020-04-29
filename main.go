@@ -169,6 +169,7 @@ func hostScreen(gui fyne.App) fyne.CanvasObject {
 		OnSubmit: func() {
 			fmt.Println("Hosting as", server.Text)
 			go networkHost(server.Text)
+			setContainer(hostContainer, otherHostScreen())
 		},
 	}
 	form.Append("Listen address:port", server)
@@ -199,7 +200,6 @@ func joinScreen(gui fyne.App) fyne.CanvasObject {
 			var user User
 			user.Name = username.Text
 			user.Password = password.Text
-			setContainer(hostContainer, otherHostScreen())
 			go networkJoin(server.Text, user)
 		},
 	}
