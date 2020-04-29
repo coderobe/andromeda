@@ -92,7 +92,7 @@ func networkHost(server string) (err error) {
 			layout.NewSpacer(),
 			widget.NewLabelWithStyle(serverKey, fyne.TextAlignCenter, fyne.TextStyle{Monospace: true}),
 			layout.NewSpacer(),
-			widget.NewLabelWithStyle("Tell your users.", fyne.TextAlignCenter, fyne.TextStyle{Italic: true}),
+			widget.NewLabelWithStyle("Share this with your users.", fyne.TextAlignCenter, fyne.TextStyle{Italic: true}),
 		),
 	))
 
@@ -190,11 +190,11 @@ func networkHost(server string) (err error) {
 
 								widget.NewGroup("Allow registration?",
 									fyne.NewContainerWithLayout(layout.NewGridLayout(2),
-										widget.NewButton("No", func() {
+										widget.NewButton("Deny", func() {
 											fmt.Println("Disallowed registration for", auth.Username)
 											registerPermitChan <- false
 										}),
-										widget.NewButton("Yes", func() {
+										widget.NewButton("Allow", func() {
 											fmt.Println("Allowed registration for", auth.Username)
 											registerPermitChan <- true
 										}),
@@ -294,11 +294,11 @@ func networkJoin(server string, user User) (err error) {
 
 			widget.NewGroup("Continue connecting?",
 				fyne.NewContainerWithLayout(layout.NewGridLayout(2),
-					widget.NewButton("No", func() {
+					widget.NewButton("Abort", func() {
 						fmt.Println("Cancelled connection")
 						abortChan <- true
 					}),
-					widget.NewButton("Yes", func() {
+					widget.NewButton("Continue", func() {
 						fmt.Println("Continuing connection")
 						abortChan <- false
 					}),
@@ -326,7 +326,7 @@ func networkJoin(server string, user User) (err error) {
 			layout.NewSpacer(),
 			widget.NewLabelWithStyle(publicKey, fyne.TextAlignCenter, fyne.TextStyle{Monospace: true}),
 			layout.NewSpacer(),
-			widget.NewLabelWithStyle("Please tell your host\nto verify your connection.", fyne.TextAlignCenter, fyne.TextStyle{Italic: true}),
+			widget.NewLabelWithStyle("Please share this with your host\nto verify your connection.", fyne.TextAlignCenter, fyne.TextStyle{Italic: true}),
 		),
 	))
 
@@ -349,7 +349,7 @@ func networkJoin(server string, user User) (err error) {
 					continue
 				}
 			}
-			panic("BBBBBBBBBBBBBBBBBBBBBb")
+			return err
 		}
 		switch messageType := uint8(messageByte); messageType {
 		case packetPing:
