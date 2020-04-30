@@ -28,26 +28,62 @@ jobs:
         cache-name: cache-go-deps
       with:
         path: ~/go
-        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/go.sum') }}
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
         restore-keys: |
-          ${{ runner.os }}-build-${{ env.cache-name }}-
-          ${{ runner.os }}-build-
-          ${{ runner.os }}-
+          ${{ runner.os }}-go-
+
+    - name: Cache go build artifacts
+      uses: actions/cache@v1
+      env:
+        cache-name: cache-go-artifacts
+      with:
+        path: ~/.cache/go-build
+        key: ${{ runner.os }}-go-artifacts- ${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-artifacts-
+
+    - name: Cache fyne-cross
+      uses: actions/cache@v1
+      env:
+        cache-name: cache-fyne-cross
+      with:
+        path: ~/.cache/fyne-cross
+        key: ${{ runner.os }}-fyne-cross- ${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-fyne-cross-
 
     - name: Get dependencies
-      run: go get -v -t -d ./...
+      run: go get github.com/lucor/fyne-cross/cmd/fyne-cross
 
     - name: Install system dependencies
-      run: sudo apt-get install libgl1-mesa-dev xorg-dev upx-ucl
+      run: sudo apt install upx-ucl
 
     - name: Build
-      run: go build -ldflags="-s -w" -v .
+      run: fyne-cross --targets=linux/amd64,windows/amd64,darwin/amd64 --output=andromeda --appID=net.in.rob.andromeda .
+
+    - name: List
+      run: find fyne-cross
     
     - name: Compress
-      run: upx andromeda
+      run: |
+        upx fyne-cross/bin/windows-*/*
+        upx fyne-cross/bin/darwin-*/*
 
-    - name: Upload a Build Artifact
+    - name: Upload linux build
       uses: actions/upload-artifact@v2
       with:
-        name: andromeda
-        path: andromeda
+        name: andromeda-linux
+        path: fyne-cross/bin/linux-amd64/andromeda
+
+    - name: Upload windows build
+      uses: actions/upload-artifact@v2
+      with:
+        name: andromeda-win64
+        path: fyne-cross/bin/windows-amd64/andromeda.exe
+
+    - name: Upload darwin build
+      uses: actions/upload-artifact@v2
+      with:
+        name: andromeda-darwin
+        path: fyne-cross/bin/darwin-amd64/andromeda
+
