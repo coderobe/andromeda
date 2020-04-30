@@ -19,6 +19,16 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+type TappableLabel struct {
+	widget.Label
+	clipboard fyne.Clipboard
+}
+
+func (t *TappableLabel) Tapped(*fyne.PointEvent) {
+	t.clipboard.SetContent(t.Text)
+	println(t.Text)
+}
+
 type Message struct {
 	ID     int
 	Packet interface{}
@@ -65,6 +75,7 @@ var UserList []string
 var UserListSelect fyne.CanvasObject
 var UserListSelectElem *widget.Select
 var userEditButton *widget.Button
+
 func updateUIVars() {
 	for _, User := range Users {
 		UserList = append(UserList, User.Name)
@@ -118,7 +129,10 @@ func networkHost(server string) (err error) {
 			widget.NewVBox(
 				widget.NewLabelWithStyle("Your host is presenting this key:", fyne.TextAlignCenter, fyne.TextStyle{Bold: true}),
 				layout.NewSpacer(),
-				widget.NewLabelWithStyle(serverKey, fyne.TextAlignCenter, fyne.TextStyle{Monospace: true}),
+				&TappableLabel{
+					Label:     *widget.NewLabelWithStyle(serverKey, fyne.TextAlignCenter, fyne.TextStyle{Monospace: true}),
+					clipboard: win.Clipboard(),
+				},
 				layout.NewSpacer(),
 				widget.NewLabelWithStyle("Share this with your users.", fyne.TextAlignCenter, fyne.TextStyle{Italic: true}),
 			),
@@ -236,7 +250,10 @@ func networkHost(server string) (err error) {
 								layout.NewSpacer(),
 								widget.NewLabelWithStyle("The user is presenting this key:", fyne.TextAlignCenter, fyne.TextStyle{Bold: true}),
 								layout.NewSpacer(),
-								widget.NewLabelWithStyle(clientKey, fyne.TextAlignCenter, fyne.TextStyle{Monospace: true}),
+								&TappableLabel{
+									Label:     *widget.NewLabelWithStyle(clientKey, fyne.TextAlignCenter, fyne.TextStyle{Monospace: true}),
+									clipboard: win.Clipboard(),
+								},
 								layout.NewSpacer(),
 
 								widget.NewGroup("Allow registration?",
@@ -339,7 +356,10 @@ func networkJoin(server string, user User) (err error) {
 		widget.NewVBox(
 			widget.NewLabelWithStyle("The host is presenting this key:", fyne.TextAlignCenter, fyne.TextStyle{Bold: true}),
 			layout.NewSpacer(),
-			widget.NewLabelWithStyle(serverKey, fyne.TextAlignCenter, fyne.TextStyle{Monospace: true}),
+			&TappableLabel{
+				Label:     *widget.NewLabelWithStyle(serverKey, fyne.TextAlignCenter, fyne.TextStyle{Monospace: true}),
+				clipboard: win.Clipboard(),
+			},
 			layout.NewSpacer(),
 			widget.NewLabelWithStyle("If this is not the same key the host sees,\nyour connection might be intercepted.", fyne.TextAlignCenter, fyne.TextStyle{Italic: true}),
 			layout.NewSpacer(),
@@ -376,7 +396,10 @@ func networkJoin(server string, user User) (err error) {
 		widget.NewVBox(
 			widget.NewLabelWithStyle("Your client is identifying as:", fyne.TextAlignCenter, fyne.TextStyle{Bold: true}),
 			layout.NewSpacer(),
-			widget.NewLabelWithStyle(publicKey, fyne.TextAlignCenter, fyne.TextStyle{Monospace: true}),
+			&TappableLabel{
+				Label:     *widget.NewLabelWithStyle(publicKey, fyne.TextAlignCenter, fyne.TextStyle{Monospace: true}),
+				clipboard: win.Clipboard(),
+			},
 			layout.NewSpacer(),
 			widget.NewLabelWithStyle("Please share this with your host\nto verify your connection.", fyne.TextAlignCenter, fyne.TextStyle{Italic: true}),
 		),
@@ -527,6 +550,8 @@ func getContainer(box *widget.Box) fyne.CanvasObject {
 	return box.Children[0]
 }
 
+var win fyne.Window
+
 func main() {
 	hostContainer = widget.NewHBox()
 	joinContainer = widget.NewHBox()
@@ -536,7 +561,7 @@ func main() {
 	})
 
 	gui := app.NewWithID("net.in.rob.andromeda")
-	win := gui.NewWindow("rob.in.net andromeda")
+	win = gui.NewWindow("rob.in.net andromeda")
 	win.SetMaster()
 
 	setContainer(hostContainer, hostScreen())
