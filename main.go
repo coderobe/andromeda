@@ -86,6 +86,7 @@ func networkHost(server string) (err error) {
 		}
 	}
 
+	registrationEnabled := false
 	setContainer(hostContainer, widget.NewGroup("Accepting connections",
 		widget.NewVBox(
 			widget.NewLabelWithStyle("Your host is presenting this key:", fyne.TextAlignCenter, fyne.TextStyle{Bold: true}),
@@ -93,6 +94,14 @@ func networkHost(server string) (err error) {
 			widget.NewLabelWithStyle(serverKey, fyne.TextAlignCenter, fyne.TextStyle{Monospace: true}),
 			layout.NewSpacer(),
 			widget.NewLabelWithStyle("Share this with your users.", fyne.TextAlignCenter, fyne.TextStyle{Italic: true}),
+			layout.NewSpacer(),
+			widget.NewHBox(
+				layout.NewSpacer(),
+				widget.NewCheck("Enable registration requests", func(b bool) {
+					registrationEnabled = b
+				}),
+				layout.NewSpacer(),
+			),
 		),
 	))
 
@@ -162,7 +171,7 @@ func networkHost(server string) (err error) {
 							break
 						}
 					}
-					if !userExists {
+					if !userExists && registrationEnabled {
 						registerPermitChan := make(chan bool)
 
 						clientKeyWords := strings.Split(bytesToDiceware(conn.GetServerPublicKey()[:]), " ")
