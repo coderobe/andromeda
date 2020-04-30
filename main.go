@@ -61,8 +61,34 @@ func boundSendMessage(encoder *msgpack.Encoder, conn net.Conn) func(packetID int
 	}
 }
 
+var UserList []string
+var UserListSelect fyne.CanvasObject
+var UserListSelectElem *widget.Select
+var userEditButton *widget.Button
+func updateUIVars() {
+	for _, User := range Users {
+		UserList = append(UserList, User.Name)
+	}
+	UserListSelectElem = widget.NewSelect(UserList, func(username string) {
+		setContainer(userConfigContainer, UserListSelect)
+	})
+	UserListSelect = widget.NewHBox(
+		layout.NewSpacer(),
+		UserListSelectElem,
+		layout.NewSpacer(),
+	)
+	setContainer(userConfigContainer, UserListSelect)
+	userEditButton.Enable()
+	println(UserList)
+}
+
 func networkHost(server string) (err error) {
 	defer setContainer(hostContainer, hostScreen())
+
+	if UserListSelectElem == nil {
+		userEditButton.Disable()
+	}
+
 	listener, err := net.Listen("tcp", server)
 	if err != nil {
 		fmt.Println("Can't listen")
@@ -87,20 +113,36 @@ func networkHost(server string) (err error) {
 	}
 
 	registrationEnabled := false
-	setContainer(hostContainer, widget.NewGroup("Accepting connections",
-		widget.NewVBox(
-			widget.NewLabelWithStyle("Your host is presenting this key:", fyne.TextAlignCenter, fyne.TextStyle{Bold: true}),
-			layout.NewSpacer(),
-			widget.NewLabelWithStyle(serverKey, fyne.TextAlignCenter, fyne.TextStyle{Monospace: true}),
-			layout.NewSpacer(),
-			widget.NewLabelWithStyle("Share this with your users.", fyne.TextAlignCenter, fyne.TextStyle{Italic: true}),
-			layout.NewSpacer(),
+	setContainer(hostContainer, widget.NewVBox(
+		widget.NewGroup("Accepting connections",
+			widget.NewVBox(
+				widget.NewLabelWithStyle("Your host is presenting this key:", fyne.TextAlignCenter, fyne.TextStyle{Bold: true}),
+				layout.NewSpacer(),
+				widget.NewLabelWithStyle(serverKey, fyne.TextAlignCenter, fyne.TextStyle{Monospace: true}),
+				layout.NewSpacer(),
+				widget.NewLabelWithStyle("Share this with your users.", fyne.TextAlignCenter, fyne.TextStyle{Italic: true}),
+			),
+		),
+		layout.NewSpacer(),
+		widget.NewGroup("Configuration",
 			widget.NewHBox(
 				layout.NewSpacer(),
 				widget.NewCheck("Enable registration requests", func(b bool) {
 					registrationEnabled = b
 				}),
 				layout.NewSpacer(),
+			),
+			fyne.NewContainerWithLayout(layout.NewGridLayout(2),
+				widget.NewGroup("User",
+					userConfigContainer,
+					fyne.NewContainerWithLayout(layout.NewGridLayout(1), userEditButton),
+				),
+				widget.NewGroup("Host",
+					widget.NewLabelWithStyle("Local configuration", fyne.TextAlignCenter, fyne.TextStyle{Italic: true}),
+					widget.NewButton("Edit", func() {
+						println("clicked host edit")
+					}),
+				),
 			),
 		),
 	))
@@ -228,6 +270,7 @@ func networkHost(server string) (err error) {
 									}
 								}()
 								Users = append(Users, newUser)
+								updateUIVars()
 							}
 						}
 						setContainer(hostContainer, oldContainer)
@@ -474,6 +517,7 @@ func joinScreen() fyne.CanvasObject {
 
 var hostContainer *widget.Box
 var joinContainer *widget.Box
+var userConfigContainer *widget.Box
 
 func setContainer(box *widget.Box, inner fyne.CanvasObject) {
 	box.Children = []fyne.CanvasObject{inner}
@@ -486,6 +530,10 @@ func getContainer(box *widget.Box) fyne.CanvasObject {
 func main() {
 	hostContainer = widget.NewHBox()
 	joinContainer = widget.NewHBox()
+	userConfigContainer = widget.NewHBox(widget.NewLabelWithStyle("No known users", fyne.TextAlignCenter, fyne.TextStyle{Italic: true}))
+	userEditButton = widget.NewButton("Edit", func() {
+		println("clicked user edit", UserListSelectElem.Selected)
+	})
 
 	gui := app.NewWithID("net.in.rob.andromeda")
 	win := gui.NewWindow("rob.in.net andromeda")
